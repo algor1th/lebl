@@ -32,7 +32,7 @@ public class Visitor extends GrammarBaseVisitor {
                 i = 0;
             }
         }
-        StringBuilder ret = new StringBuilder("brain " + name + " {\n");
+        StringBuilder ret = new StringBuilder("brain \"" + name + "\" {\n");
         for (GrammarParser.StatementContext statementContext : visitBlock(blocks.get("main"))) {
             if (statementContext.label() != null)
                 continue;
@@ -85,7 +85,8 @@ public class Visitor extends GrammarBaseVisitor {
 
     @Override
     public String visitSense(GrammarParser.SenseContext ctx) {
-        return "sense " + ctx.SENSE_DIR() + " " + ctx.SENSE_TARGET().getText() + " else " + ctx.alt.getText();
+        return "sense " + ctx.SENSE_DIR() + " " + ctx.SENSE_TARGET().getText() + " else " +
+                getLabelIndex(ctx.alt);
     }
 
     @Override
@@ -105,7 +106,7 @@ public class Visitor extends GrammarBaseVisitor {
 
     @Override
     public Object visitFlip(GrammarParser.FlipContext ctx) {
-        return "flip " + ctx.max + " else " + getLabelIndex(ctx.alt);
+        return "flip " + Integer.parseInt(ctx.max.getText()) + " else " + getLabelIndex(ctx.alt);
     }
 
     @Override
