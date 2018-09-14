@@ -4,16 +4,20 @@ import antlr.GrammarParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
+
+import java.io.IOException;
 
 public class Main {
     public static void main(String args[]) {
-        CharStream input = CharStreams.fromString("name lolo; block main {$start jump $start; jump $start;}");
-        var lexer = new antlr.GrammarLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        GrammarParser parser = new GrammarParser(tokens);
-        Listener listener = new Listener();
-        var walker = new ParseTreeWalker();
-        walker.walk(listener, parser.brain());
+        try {
+            CharStream input = CharStreams.fromFileName(args[1]);
+            var lexer = new antlr.GrammarLexer(input);
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            GrammarParser parser = new GrammarParser(tokens);
+            Visitor visitor = new Visitor();
+            System.out.println(visitor.visitBrain(parser.brain()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

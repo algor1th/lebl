@@ -3,7 +3,7 @@ brain: 'name' IDENTIFIER ';' block+ EOF;
 block:
     'block' IDENTIFIER '{'(statement';')+'}'
      ;
-statement: (label)?(instruction|inline);
+statement: (label)|(instruction|inline);
 instruction :
              mark
              | unmark
