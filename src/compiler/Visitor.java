@@ -55,11 +55,6 @@ public class Visitor extends GrammarBaseVisitor {
     }
 
     @Override
-    public Object visitInstruction(GrammarParser.InstructionContext ctx) {
-        return visitChildren(ctx);
-    }
-
-    @Override
     public String visitMark(GrammarParser.MarkContext ctx) {
         return "mark " + ctx.NUMBER().getSymbol().getText();
     }
@@ -90,47 +85,51 @@ public class Visitor extends GrammarBaseVisitor {
 
     @Override
     public String visitSense(GrammarParser.SenseContext ctx) {
-        return "sense " + ctx.SENSE_TARGET().getText() + " else " + ctx.alt.getText();
+        return "sense " + ctx.SENSE_DIR() + " " + ctx.SENSE_TARGET().getText() + " else " + ctx.alt.getText();
     }
 
     @Override
     public Object visitMove(GrammarParser.MoveContext ctx) {
-        return null;
+        return "move else " + getLabelIndex(ctx.label().getText());
     }
 
     @Override
     public Object visitPickup(GrammarParser.PickupContext ctx) {
-        return null;
+        return "pickup else " + getLabelIndex(ctx.label());
     }
 
     @Override
     public Object visitDrop(GrammarParser.DropContext ctx) {
-        return null;
+        return "drop else " + getLabelIndex(ctx.label());
     }
 
     @Override
     public Object visitFlip(GrammarParser.FlipContext ctx) {
-        return null;
+        return "flip " + ctx.max + " else " + getLabelIndex(ctx.alt);
     }
 
     @Override
     public Object visitBreed(GrammarParser.BreedContext ctx) {
-        return null;
+        return "breed else " + getLabelIndex(ctx.label());
     }
 
     @Override
     public Object visitJump(GrammarParser.JumpContext ctx) {
-        return "jump " + getLabelIndex(ctx.label().getText());
+        return "jump " + getLabelIndex(ctx.label());
     }
 
     @Override
     public Object visitDirection(GrammarParser.DirectionContext ctx) {
-        return null;
+        return "direction " + ctx.DIR_DIR() + " else " + getLabelIndex(ctx.label());
+    }
+
+    private int getLabelIndex(GrammarParser.LabelContext label) {
+        return getLabelIndex(label.getText());
     }
 
     @Override
     public Object visitTurn(GrammarParser.TurnContext ctx) {
-        return null;
+        return "turn " + ctx.SENSE_DIR();
     }
 
     @Override

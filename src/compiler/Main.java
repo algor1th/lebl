@@ -10,7 +10,7 @@ import java.io.IOException;
 public class Main {
     public static void main(String args[]) {
         try {
-            CharStream input = CharStreams.fromFileName(args[1]);
+            CharStream input = CharStreams.fromFileName(args[0]);
             var lexer = new antlr.GrammarLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             GrammarParser parser = new GrammarParser(tokens);

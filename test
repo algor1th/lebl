@@ -1,0 +1,11 @@
+name brainA;
+block main {
+    $start;
+    jump $start;
+    inline asdf;
+}
+block asdf {
+    sense ahead food else $start;
+    move else $start;
+    jump $start;
+}
