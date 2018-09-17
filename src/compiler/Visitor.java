@@ -18,11 +18,6 @@ public class Visitor extends GrammarBaseVisitor {
         var name = ctx.IDENTIFIER().getSymbol().getText();
         List<GrammarParser.StatementContext> code;
         ctx.block().forEach(block -> blocks.put(block.IDENTIFIER().getSymbol().getText(), block));
-//        for (GrammarParser.BlockContext block :
-//                ctx.block()) {
-////            System.out.println(block.IDENTIFIER());
-//            code.addAll(visitBlock(block));
-//        }
         code = visitBlock(blocks.get("main"));
         for (int i = 0; i < code.size(); i++) {
             var statement = code.get(i);
