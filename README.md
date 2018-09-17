@@ -10,4 +10,4 @@ use
 > java -jar lebl.jar sourcefile > compiled
 to save output to a file
 ## Download
-[here](http://lenny.d3vs.cc/lebl.jar)
+https://github.com/algor1th/lebl/releases
