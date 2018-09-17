@@ -1,0 +1,41 @@
+name conterganixfuer;
+block main {
+$start;
+sense ahead food else $flipleft;
+move else $start;
+pickup else $start;
+jump $sensehome;
+inline turnrandom;
+$movenoflip;
+move else $flipleft;
+jump $start;
+$sensehome;
+sense ahead home else $flipleft2;
+move else $sensehome;
+drop else $start;
+inline turnrandom2;
+jump $sensehome;
+$lmove;
+move else $flipleft2;
+jump $sensehome;
+}
+block turnrandom {
+$flipleft;
+flip 3 else $flipright;
+turn left;
+jump $start;
+$flipright;
+flip 2 else $movenoflip;
+turn right;
+jump $start;
+}
+block turnrandom2 {
+$flipleft2;
+flip 3 else $flipright2;
+$turnleft;
+turn left;
+jump $sensehome;
+$flipright2;
+flip 2 else $lmove;
+turn right;
+}
