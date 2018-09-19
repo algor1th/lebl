@@ -1,11 +1,16 @@
 name brainA;
 block main {
+    changeblock gh;
     $start;
-    jump $start;
+    test 2 else $start;
     inline asdf;
 }
 block asdf {
     sense ahead food else $start;
     move else $start;
-    jump $start;
+    changeblock gh;
+}
+block gh {
+    turn right;
+    changeblock main;
 }

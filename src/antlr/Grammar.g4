@@ -3,7 +3,7 @@ brain: 'name' IDENTIFIER ';' block+ EOF;
 block:
     'block' IDENTIFIER '{'(statement';')+'}'
      ;
-statement: (label)|(instruction|inline);
+statement: (label)|(instruction|inline|changeblock);
 instruction :
              mark
              | unmark
@@ -20,6 +20,8 @@ instruction :
              | direction
              | turn
              ;
+
+changeblock: 'changeblock' IDENTIFIER;
 
 mark :
     'mark'  NUMBER ;

@@ -3,34 +3,42 @@ package compiler;
 import antlr.GrammarBaseVisitor;
 import antlr.GrammarParser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class Visitor extends GrammarBaseVisitor {
 
     private final Map<String, GrammarParser.BlockContext> blocks = new HashMap<>();
+    private final String blockprefix = "block:";
     private LabelScope scope = new LabelScope();
 
     @Override
     public String visitBrain(GrammarParser.BrainContext ctx) {
         var name = ctx.IDENTIFIER().getSymbol().getText();
         List<GrammarParser.StatementContext> code;
-        ctx.block().forEach(block -> blocks.put(block.IDENTIFIER().getSymbol().getText(), block));
+        ctx.block().forEach(block -> blocks.put(block.IDENTIFIER().getText(), block));
         code = visitBlock(blocks.get("main"));
+        scope.setLabel("block:main", 0);
         for (int i = 0; i < code.size(); i++) {
             var statement = code.get(i);
             if (statement.label() != null) {
                 scope.setLabel(statement.label().getText(), i);
                 code.remove(statement);
                 i = 0;
+            } else if (statement.changeblock() != null) {
+                String blockName = statement.changeblock().IDENTIFIER().getText();
+                if (!scope.contains(blockprefix + blockName)) {
+                    GrammarParser.BlockContext block = blocks.get(blockName);
+                    scope.setLabel(blockprefix + blockName, code.size());
+                    code.addAll(visitBlock(block));
+                    i = 0;
+                }
             }
         }
         StringBuilder ret = new StringBuilder("brain \"" + name + "\" {\n");
-        for (GrammarParser.StatementContext statementContext : visitBlock(blocks.get("main"))) {
-            if (statementContext.label() != null)
-                continue;
+        for (GrammarParser.StatementContext statementContext : code) {
             ret.append(visitChildren(statementContext)).append("\n");
         }
         ret.append("}");
@@ -39,7 +47,7 @@ public class Visitor extends GrammarBaseVisitor {
 
     @Override
     public List<GrammarParser.StatementContext> visitBlock(GrammarParser.BlockContext ctx) {
-        List<GrammarParser.StatementContext> block = new LinkedList();
+        List<GrammarParser.StatementContext> block = new ArrayList<>();
         for (GrammarParser.StatementContext statement :
                 ctx.statement()) {
             if (statement.inline() != null) {
@@ -135,7 +143,12 @@ public class Visitor extends GrammarBaseVisitor {
     }
 
     @Override
-    public Object visitLabel(GrammarParser.LabelContext ctx) {
+    public String visitChangeblock(GrammarParser.ChangeblockContext ctx) {
+        return "jump " + getLabelIndex(blockprefix + ctx.IDENTIFIER().getText());
+    }
+
+    @Override
+    public String visitLabel(GrammarParser.LabelContext ctx) {
         return "label " + ctx.getText();
     }
 }

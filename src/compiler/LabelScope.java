@@ -26,10 +26,22 @@ public class LabelScope {
     }
 
     void setLabel(String label, int line) {
+        if (labels.containsKey(label))
+            throw new IllegalStateException("label already declared");
         labels.put(label, line);
     }
 
     public LabelScope getParent() {
         return parent;
+    }
+
+    boolean contains(String label) {
+        if (labels.containsKey(label)) {
+            return true;
+        } else if (parent != null) {
+            return parent.contains(label);
+        } else {
+            return false;
+        }
     }
 }
