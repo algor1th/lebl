@@ -15,7 +15,7 @@ public class LabelScope {
 
     }
 
-    int lookupLabel(String label) {
+    public int lookupLabel(String label) {
         if (labels.containsKey(label)) {
             return labels.get(label);
         } else if (parent != null) {
@@ -25,9 +25,9 @@ public class LabelScope {
         }
     }
 
-    void setLabel(String label, int line) {
+    public void setLabel(String label, int line) {
         if (labels.containsKey(label))
-            throw new IllegalStateException("label already declared");
+            throw new IllegalStateException(String.format("label already declared: %s", label));
         labels.put(label, line);
     }
 

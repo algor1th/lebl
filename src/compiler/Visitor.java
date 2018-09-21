@@ -2,7 +2,9 @@ package compiler;
 
 import antlr.GrammarBaseVisitor;
 import antlr.GrammarParser;
+import compiler.statements.Statement;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,145 +12,69 @@ import java.util.Map;
 
 public class Visitor extends GrammarBaseVisitor {
 
-    private final Map<String, GrammarParser.BlockContext> blocks = new HashMap<>();
+    private final Map<String, Block> blocks = new HashMap<>();
     private final String blockprefix = "block:";
     private LabelScope scope = new LabelScope();
+    private StatementVisitor statementVisitor;
 
+    /**
+     * Alle blocks in map
+     *  Alle blocks wissen mit welchen anderen Blocks sie durch inline und changeblock gelinkt sind
+     * Bei main block startend schauen ob alle blocks erreichbar sind/keine rekursiven inlines stattfinden
+     * Den main block und alle benutzten Blocks in eine Liste von Statements compilen (inlines werden zu mehreren Statements)
+     * Durchgehen und labels Zeilennummern assignen
+     * Durchgehen und labelReferenzen durch Zeilennummern ersetzen und in einen Stringbuilder schreiben
+     *
+     * @param ctx
+     * @return
+     */
     @Override
     public String visitBrain(GrammarParser.BrainContext ctx) {
+        statementVisitor = new StatementVisitor();
         var name = ctx.IDENTIFIER().getSymbol().getText();
-        List<GrammarParser.StatementContext> code;
-        ctx.block().forEach(block -> blocks.put(block.IDENTIFIER().getText(), block));
-        code = visitBlock(blocks.get("main"));
-        scope.setLabel("block:main", 0);
-        for (int i = 0; i < code.size(); i++) {
-            var statement = code.get(i);
-            if (statement.label() != null) {
-                scope.setLabel(statement.label().getText(), i);
-                code.remove(statement);
-                i = 0;
-            } else if (statement.changeblock() != null) {
-                String blockName = statement.changeblock().IDENTIFIER().getText();
-                if (!scope.contains(blockprefix + blockName)) {
-                    GrammarParser.BlockContext block = blocks.get(blockName);
-                    scope.setLabel(blockprefix + blockName, code.size());
-                    code.addAll(visitBlock(block));
-                    i = 0;
-                }
-            }
+        ctx.block().forEach(block -> blocks.put(block.IDENTIFIER().getText(), visitBlock(block)));
+
+        var main = blocks.get("main");
+        main.checkRecursiveInlines(blocks);
+        var reachableBlocks = main.checkReachableBlocks(blocks);
+
+        List<Statement> statements = new ArrayList<>();
+
+        for (Block reachableBlock : reachableBlocks) {
+            statements.addAll(reachableBlock.compile(blocks));
         }
+
+        int line = 0;
+        for (Statement statement : statements) {
+            line = statement.assignLine(scope, line);
+        }
+
         StringBuilder ret = new StringBuilder("brain \"" + name + "\" {\n");
-        for (GrammarParser.StatementContext statementContext : code) {
-            ret.append(visitChildren(statementContext)).append("\n");
+        for (Statement statement : statements) {
+            statement.assignLabel(scope);
+            ret.append(statement.writeOut()).append('\n');
         }
+
         ret.append("}");
         return ret.toString();
     }
 
     @Override
-    public List<GrammarParser.StatementContext> visitBlock(GrammarParser.BlockContext ctx) {
-        List<GrammarParser.StatementContext> block = new ArrayList<>();
-        for (GrammarParser.StatementContext statement :
-                ctx.statement()) {
+    public Block visitBlock(GrammarParser.BlockContext ctx) {
+        String name = ctx.IDENTIFIER().getText();
+        List<Statement> statements = new ArrayList<>();
+        List<String> inlinedBlocks = new ArrayList<>();
+        List<String> linkedBlocks = new ArrayList<>();
+
+        for (GrammarParser.StatementContext statement : ctx.statement()) {
             if (statement.inline() != null) {
-                block.addAll(visitInline(statement.inline()));
-            } else block.add(statement);
+                inlinedBlocks.add(statement.inline().IDENTIFIER().getText());
+            } else if (statement.changeblock() != null) {
+                linkedBlocks.add(statement.changeblock().IDENTIFIER().getText());
+            }
+            statements.add(statementVisitor.visit(statement));
         }
-        return block;
-    }
 
-    @Override
-    public String visitMark(GrammarParser.MarkContext ctx) {
-        return "mark " + ctx.NUMBER().getSymbol().getText();
-    }
-
-    @Override
-    public String visitUnmark(GrammarParser.UnmarkContext ctx) {
-        return "unmark " + ctx.NUMBER().getSymbol().getText();
-    }
-
-    @Override
-    public String visitSet(GrammarParser.SetContext ctx) {
-        return "set " + ctx.NUMBER().getSymbol().getText();
-    }
-
-    @Override
-    public String visitUnset(GrammarParser.UnsetContext ctx) {
-        return "unset " + ctx.NUMBER().getSymbol();
-    }
-
-    @Override
-    public String visitTest(GrammarParser.TestContext ctx) {
-        return "test " + ctx.reg.getText() + " else " + getLabelIndex(ctx.alt.getText());
-    }
-
-    private int getLabelIndex(String label) {
-        return scope.lookupLabel(label);
-    }
-
-    @Override
-    public String visitSense(GrammarParser.SenseContext ctx) {
-        return "sense " + ctx.SENSE_DIR() + " " + ctx.SENSE_TARGET().getText() + " else " +
-                getLabelIndex(ctx.alt);
-    }
-
-    @Override
-    public Object visitMove(GrammarParser.MoveContext ctx) {
-        return "move else " + getLabelIndex(ctx.label().getText());
-    }
-
-    @Override
-    public Object visitPickup(GrammarParser.PickupContext ctx) {
-        return "pickup else " + getLabelIndex(ctx.label());
-    }
-
-    @Override
-    public Object visitDrop(GrammarParser.DropContext ctx) {
-        return "drop else " + getLabelIndex(ctx.label());
-    }
-
-    @Override
-    public Object visitFlip(GrammarParser.FlipContext ctx) {
-        return "flip " + Integer.parseInt(ctx.max.getText()) + " else " + getLabelIndex(ctx.alt);
-    }
-
-    @Override
-    public Object visitBreed(GrammarParser.BreedContext ctx) {
-        return "breed else " + getLabelIndex(ctx.label());
-    }
-
-    @Override
-    public Object visitJump(GrammarParser.JumpContext ctx) {
-        return "jump " + getLabelIndex(ctx.label());
-    }
-
-    @Override
-    public Object visitDirection(GrammarParser.DirectionContext ctx) {
-        return "direction " + ctx.DIR_DIR() + " else " + getLabelIndex(ctx.label());
-    }
-
-    private int getLabelIndex(GrammarParser.LabelContext label) {
-        return getLabelIndex(label.getText());
-    }
-
-    @Override
-    public Object visitTurn(GrammarParser.TurnContext ctx) {
-        return "turn " + ctx.SENSE_DIR();
-    }
-
-    @Override
-    public List<GrammarParser.StatementContext> visitInline(GrammarParser.InlineContext ctx) {
-        GrammarParser.BlockContext block = blocks.get(ctx.IDENTIFIER().getText());
-        return visitBlock(block);
-    }
-
-    @Override
-    public String visitChangeblock(GrammarParser.ChangeblockContext ctx) {
-        return "jump " + getLabelIndex(blockprefix + ctx.IDENTIFIER().getText());
-    }
-
-    @Override
-    public String visitLabel(GrammarParser.LabelContext ctx) {
-        return "label " + ctx.getText();
+        return new Block(name, statements, inlinedBlocks, linkedBlocks);
     }
 }
