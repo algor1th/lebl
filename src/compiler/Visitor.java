@@ -4,7 +4,6 @@ import antlr.GrammarBaseVisitor;
 import antlr.GrammarParser;
 import compiler.statements.Statement;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +51,7 @@ public class Visitor extends GrammarBaseVisitor {
         StringBuilder ret = new StringBuilder("brain \"" + name + "\" {\n");
         for (Statement statement : statements) {
             statement.assignLabel(scope);
-            ret.append(statement.writeOut()).append('\n');
+            statement.writeOut(ret);
         }
 
         ret.append("}");

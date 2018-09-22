@@ -18,7 +18,5 @@ public abstract class Statement {
 
     public void assignLabel(LabelScope scope) {}
 
-    public String writeOut() {
-        return "";
-    };
+    public void writeOut(StringBuilder ret) {}
 }

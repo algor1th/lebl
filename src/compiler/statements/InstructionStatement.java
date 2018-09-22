@@ -8,7 +8,7 @@ public class InstructionStatement extends Statement {
     }
 
     @Override
-    public String writeOut() {
-        return text;
+    public void writeOut(StringBuilder ret) {
+        ret.append(text).append('\n');
     }
 }

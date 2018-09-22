@@ -17,7 +17,7 @@ public class JumpInstructionStatement extends InstructionStatement {
     }
 
     @Override
-    public String writeOut() {
-        return text + jumpAddress;
+    public void writeOut(StringBuilder ret) {
+        ret.append(text).append(jumpAddress).append('\n');
     }
 }
