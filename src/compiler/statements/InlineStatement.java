@@ -9,8 +9,7 @@ import java.util.Map;
 
 public class InlineStatement extends Statement {
     private final String block;
-    private Collection<Statement> inlinedBlock;
-    private LabelScope inlinedScope;
+    private Collection<Statement> inlinedStatements;
 
     public InlineStatement(String block) {
         this.block = block;
@@ -18,9 +17,8 @@ public class InlineStatement extends Statement {
 
     @Override
     public int assignLine(LabelScope scope, int line) {
-        inlinedScope = new LabelScope(scope);
-        for (Statement inlinedStatement : inlinedBlock) {
-            line = inlinedStatement.assignLine(inlinedScope, line);
+        for (Statement inlinedStatement : inlinedStatements) {
+            line = inlinedStatement.assignLine(scope, line);
         }
 
         return line;
@@ -28,20 +26,22 @@ public class InlineStatement extends Statement {
 
     @Override
     public void assignLabel(LabelScope scope) {
-        for (Statement inlinedStatement : inlinedBlock) {
-            inlinedStatement.assignLabel(inlinedScope);
+        for (Statement inlinedStatement : inlinedStatements) {
+            inlinedStatement.assignLabel(scope);
         }
     }
 
     @Override
     public Collection<Statement> compile(Map<String, Block> blocks) {
-        inlinedBlock = blocks.get(block).compile(blocks, true);
-        return List.of(this);
+        Block inlinedBlock = blocks.get(block);
+        inlinedBlock.compile(blocks, true);
+        inlinedStatements = inlinedBlock.getCompiledStatements();
+        return inlinedStatements;
     }
 
     @Override
     public void writeOut(StringBuilder ret) {
-        for (Statement inlinedStatement : inlinedBlock) {
+        for (Statement inlinedStatement : inlinedStatements) {
             inlinedStatement.writeOut(ret);
         }
     }

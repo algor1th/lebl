@@ -36,24 +36,23 @@ public class Visitor extends GrammarBaseVisitor {
         var main = blocks.get("main");
         main.checkRecursiveInlines(blocks);
         var reachableBlocks = main.checkReachableBlocks(blocks);
-
+        reachableBlocks = List.of(main);
         //todo instead of compiling to statements directly add all reachable blocks into a list
         //so that we can do block local scopes for labels defined in inlined blocks in these reachable blocks
-        List<Statement> statements = new ArrayList<>();
 
         for (Block reachableBlock : reachableBlocks) {
-            statements.addAll(reachableBlock.compile(blocks));
+            reachableBlock.compile(blocks);
         }
 
         int line = 0;
-        for (Statement statement : statements) {
-            line = statement.assignLine(scope, line);
+        for (Block reachableBlock : reachableBlocks) {
+            line = reachableBlock.assignLine(scope, line);
         }
 
         StringBuilder ret = new StringBuilder("brain \"" + name + "\" {\n");
-        for (Statement statement : statements) {
-            statement.assignLabel(scope);
-            statement.writeOut(ret);
+        for (Block reachableBlock : reachableBlocks) {
+            reachableBlock.assignLabel();
+            reachableBlock.writeOut(ret);
         }
 
         ret.append("}");

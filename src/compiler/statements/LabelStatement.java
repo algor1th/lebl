@@ -11,7 +11,7 @@ public class LabelStatement extends Statement {
 
     @Override
     public int assignLine(LabelScope scope, int line) {
-        scope.setLabel(label, line);
+        scope.getParent().setLabel(label, line);
         return line;
     }
 }
