@@ -2,6 +2,9 @@ package compiler.statements;
 
 import compiler.LabelScope;
 
+/**
+ * Any instruction that jumps, e.g. jump, sense, drop etc.
+ */
 public class JumpInstructionStatement extends InstructionStatement {
     private final String jumpLabel;
     private int jumpAddress;

@@ -22,10 +22,20 @@ public class Block {
         this.linkedBlocks = linkedBlocks;
     }
 
+    /**
+     * Throw exception if we have recursive inlines
+     * @param blocks
+     */
     public void checkRecursiveInlines(Map<String, Block> blocks) {
 
     }
 
+    /**
+     * Return a collection of blocks that is reachable from the current block
+     * //todo for now returns all blocks, but they are in the wrong order
+     * @param blocks
+     * @return
+     */
     public Collection<Block> checkReachableBlocks(Map<String, Block> blocks) {
         return blocks.values();
     }

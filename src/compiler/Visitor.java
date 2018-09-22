@@ -37,6 +37,8 @@ public class Visitor extends GrammarBaseVisitor {
         main.checkRecursiveInlines(blocks);
         var reachableBlocks = main.checkReachableBlocks(blocks);
 
+        //todo instead of compiling to statements directly add all reachable blocks into a list
+        //so that we can do block local scopes for labels defined in inlined blocks in these reachable blocks
         List<Statement> statements = new ArrayList<>();
 
         for (Block reachableBlock : reachableBlocks) {
