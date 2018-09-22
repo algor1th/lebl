@@ -34,11 +34,11 @@ public class Visitor extends GrammarBaseVisitor {
         ctx.block().forEach(block -> blocks.put(block.IDENTIFIER().getText(), visitBlock(block)));
 
         var main = blocks.get("main");
+        //todo could maybe also do both checks in one go
         main.checkRecursiveInlines(blocks);
         var reachableBlocks = main.checkReachableBlocks(blocks);
+        //for the liechtenstein example this works as we have no other top level blocks, todo write checkReachableblock
         reachableBlocks = List.of(main);
-        //todo instead of compiling to statements directly add all reachable blocks into a list
-        //so that we can do block local scopes for labels defined in inlined blocks in these reachable blocks
 
         for (Block reachableBlock : reachableBlocks) {
             reachableBlock.compile(blocks);
