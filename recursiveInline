@@ -2,7 +2,7 @@ name rekursiveInline;
 
 block main {
     set 1;
-    changeblock block1;
+    inline block1;
 }
 
 block block1 {

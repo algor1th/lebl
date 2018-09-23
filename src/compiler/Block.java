@@ -25,8 +25,10 @@ public class Block implements Scopeable {
 
     public void checkReachableBlock(Scope scope, Collection<Block> stateBlocks, Collection<Block> inlineBlocks, boolean inline) {
         if (inline) {
-            if (stateBlocks.contains(this) || inlineBlocks.contains(this)) {
+            if (stateBlocks.contains(this)) {
                 throw new IllegalStateException("Inlined blocks cannot be explicitly changed to.");
+            } else if (inlineBlocks.contains(this)) {
+                throw new IllegalStateException(String.format("Found recursive inline blocks at: %s", inlineBlocks.toString()));
             }
             inlineBlocks.add(this);
         } else {
@@ -67,5 +69,10 @@ public class Block implements Scopeable {
 
     public Block getCopy() {
         return new Block(name, statements, inlinedBlocks, linkedBlocks);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Block (%s)", name);
     }
 }
