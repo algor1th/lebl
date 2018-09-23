@@ -1,6 +1,6 @@
 package compiler.statements;
 
-import compiler.LabelScope;
+import compiler.Scope;
 
 /**
  * Any instruction that jumps, e.g. jump, sense, drop etc.
@@ -15,7 +15,7 @@ public class JumpInstructionStatement extends InstructionStatement {
     }
 
     @Override
-    public void assignLabel(LabelScope scope) {
+    public void assignLabel(Scope scope) {
         jumpAddress = scope.lookupLabel(jumpLabel);
     }
 

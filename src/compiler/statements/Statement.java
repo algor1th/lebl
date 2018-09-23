@@ -1,22 +1,13 @@
 package compiler.statements;
 
-import compiler.Block;
-import compiler.LabelScope;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import compiler.Scope;
 
 public abstract class Statement {
-    public Collection<Statement> compile(Map<String, Block> blocks) {
-        return List.of(this);
-    }
-
-    public int assignLine (LabelScope scope, int line) {
+    public int assignLine (Scope scope, int line) {
         return line + 1;
     }
 
-    public void assignLabel(LabelScope scope) {}
+    public void assignLabel(Scope scope) {}
 
     public void writeOut(StringBuilder ret) {}
 }

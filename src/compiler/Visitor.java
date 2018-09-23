@@ -4,17 +4,15 @@ import antlr.GrammarBaseVisitor;
 import antlr.GrammarParser;
 import compiler.statements.Statement;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 
 public class Visitor extends GrammarBaseVisitor {
 
-    private final Map<String, Block> blocks = new HashMap<>();
-    private final String blockprefix = "block:";
-    private LabelScope scope = new LabelScope();
-    private StatementVisitor statementVisitor;
+    StatementVisitor statementVisitor;
 
     /**
      * Alle blocks in map
@@ -29,19 +27,18 @@ public class Visitor extends GrammarBaseVisitor {
      */
     @Override
     public String visitBrain(GrammarParser.BrainContext ctx) {
+        final Scope scope = new Scope();
         statementVisitor = new StatementVisitor();
-        var name = ctx.IDENTIFIER().getSymbol().getText();
-        ctx.block().forEach(block -> blocks.put(block.IDENTIFIER().getText(), visitBlock(block)));
 
-        var main = blocks.get("main");
-        //todo could maybe also do both checks in one go
-        main.checkRecursiveInlines(blocks);
-        var reachableBlocks = main.checkReachableBlocks(blocks);
-        //for the liechtenstein example this works as we have no other top level blocks, todo write checkReachableblock
-        reachableBlocks = List.of(main);
+        var name = ctx.IDENTIFIER().getSymbol().getText();
+        ctx.block().forEach(block -> scope.setBlock(block.IDENTIFIER().getText(), visitBlock(block)));
+
+        Block main = scope.lookupBlock("main");
+        Collection<Block> reachableBlocks = new ArrayList<>();
+        main.checkReachableBlock(scope, reachableBlocks, new ArrayList<>(), false);
 
         for (Block reachableBlock : reachableBlocks) {
-            reachableBlock.compile(blocks);
+            reachableBlock.makeRepeating();
         }
 
         int line = 0;
@@ -62,17 +59,18 @@ public class Visitor extends GrammarBaseVisitor {
     @Override
     public Block visitBlock(GrammarParser.BlockContext ctx) {
         String name = ctx.IDENTIFIER().getText();
-        List<Statement> statements = new ArrayList<>();
+        Deque<Statement> statements = new ArrayDeque<>();
         List<String> inlinedBlocks = new ArrayList<>();
         List<String> linkedBlocks = new ArrayList<>();
 
-        for (GrammarParser.StatementContext statement : ctx.statement()) {
-            if (statement.inline() != null) {
-                inlinedBlocks.add(statement.inline().IDENTIFIER().getText());
-            } else if (statement.changeblock() != null) {
-                linkedBlocks.add(statement.changeblock().IDENTIFIER().getText());
+        for (GrammarParser.StatementContext statementContext : ctx.statement()) {
+            Statement statement;
+            if (statementContext.inline() != null) {
+                inlinedBlocks.add(statementContext.inline().IDENTIFIER().getText());
+            } else if (statementContext.changeblock() != null) {
+                linkedBlocks.add(statementContext.changeblock().IDENTIFIER().getText());
             }
-            statements.add(statementVisitor.visit(statement));
+            statements.add(statementVisitor.visit(statementContext));
         }
 
         return new Block(name, statements, inlinedBlocks, linkedBlocks);

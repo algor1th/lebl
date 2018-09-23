@@ -1,6 +1,6 @@
 package compiler.statements;
 
-import compiler.LabelScope;
+import compiler.Scope;
 
 public class LabelStatement extends Statement {
     private final String label;
@@ -10,7 +10,7 @@ public class LabelStatement extends Statement {
     }
 
     @Override
-    public int assignLine(LabelScope scope, int line) {
+    public int assignLine(Scope scope, int line) {
         scope.getParent().setLabel(label, line);
         return line;
     }
