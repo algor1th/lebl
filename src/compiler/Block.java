@@ -4,6 +4,7 @@ import compiler.statements.JumpInstructionStatement;
 import compiler.statements.LabelStatement;
 import compiler.statements.Statement;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
@@ -32,14 +33,16 @@ public class Block implements Scopeable {
             }
             inlineBlocks.add(this);
         } else {
-            if (inlineBlocks.contains(this)) {
+            if (stateBlocks.contains(this)) {
+                return;
+            } else if (inlineBlocks.contains(this)) {
                 throw new IllegalStateException("Inlined blocks cannot be explicitly changed to.");
             }
             stateBlocks.add(this);
         }
 
         inlinedBlocks.forEach(blockString -> scope.lookupBlock(blockString).checkReachableBlock(scope, stateBlocks, inlineBlocks, true));
-        linkedBlocks.forEach(blockString -> scope.lookupBlock(blockString).checkReachableBlock(scope, stateBlocks, inlineBlocks, false));
+        linkedBlocks.forEach(blockString -> scope.lookupBlock(blockString).checkReachableBlock(scope, stateBlocks, new ArrayList<>(), false));
     }
 
     public void makeRepeating() {
