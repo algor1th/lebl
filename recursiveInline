@@ -1,0 +1,14 @@
+name rekursiveInline;
+
+block main {
+    set 1;
+    inline block1;
+}
+
+block block1 {
+    inline block2;
+}
+
+block block2 {
+    inline block1;
+}
